@@ -1,0 +1,4 @@
+編號,名稱,面向-學生權益,面向-法規組織,面向-財務,面向-選舉
+R-01,範例大學,TRUE,TRUE,TRUE,TRUE
+R-02,範例科技大學,TRUE,FALSE,TRUE,TRUE
+R-03,範例專科學校,TRUE,TRUE,FALSE,FALSE
