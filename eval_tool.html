@@ -21,7 +21,7 @@ body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--bg);color:
 .hdr-sub{font-size:12px;opacity:.65;margin-top:2px}
 .imp-bar{background:#fff;border-bottom:1px solid var(--border);padding:9px 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .imp-lbl{font-size:12px;color:var(--muted);font-weight:600}
-.btn-imp{padding:6px 13px;border:1px solid var(--border);background:var(--bg);border-radius:7px;font-size:13px;cursor:pointer;color:var(--text);transition:.15s;font-family:inherit;font-weight:500}
+.btn-imp{padding:6px 13px;border:1px solid var(--border);background:var(--bg);border-radius:7px;font-size:13px;cursor:pointer;color:var(--text);transition:.15s;font-family:inherit;font-weight:500;text-decoration:none;display:inline-flex;align-items:center}
 .btn-imp:hover{border-color:var(--teal);color:var(--teal)}
 .btn-imp.act{background:var(--navy);color:#fff;border-color:var(--navy)}
 .imp-div{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px}
@@ -120,6 +120,7 @@ body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--bg);color:
 .ir-score{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
 .ovfb-sec{margin-top:15px}
 .ovfb-lbl{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.ovfb-note{font-size:12px;color:var(--muted);line-height:1.6;margin:-2px 0 8px}
 .ovfb-ta{width:100%;border:1px solid var(--border);border-radius:9px;padding:11px 13px;font-family:inherit;font-size:14px;resize:vertical;min-height:100px;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s}
 .ovfb-ta:focus{border-color:var(--teal);background:#fff}
 .act-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px;padding-top:15px;border-top:1px solid var(--border)}
@@ -146,6 +147,9 @@ body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--bg);color:
 .modal-ta{width:100%;border:1px solid var(--border);border-radius:9px;padding:10px;font-family:inherit;font-size:14px;min-height:120px;resize:vertical;margin-bottom:12px;outline:none}
 .modal-ta:focus{border-color:var(--teal)}
 .modal-acts{display:flex;gap:8px;justify-content:flex-end}
+.json-backup-ta{width:100%;min-height:300px;border:1px solid var(--border);border-radius:9px;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre;overflow:auto;resize:vertical;background:#f8fafc;color:#0f172a;-webkit-user-select:text;user-select:text}
+.small-note{font-size:12px;color:var(--muted);line-height:1.6}
+.sheet-note{font-size:12px;color:var(--muted);align-self:center}
 .pdf-overlay{display:none;position:fixed;inset:0;z-index:600;flex-direction:column;background:#222}
 .pdf-overlay.show{display:flex}
 .pdf-bar{background:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -185,6 +189,7 @@ body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--bg);color:
   <button class="btn-imp" onclick="App.downloadCsvTemplate()">下載 CSV 範本</button>
 </div>
 <input type="file" id="sessionIn" class="file-in" accept=".json,application/json,text/json,text/plain" onchange="App.importSession(this)">
+<input type="file" id="sheetIn" class="file-in" accept=".xlsx,.xls,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="App.importSheet(this)">
 <div class="tabs-wrap"><div class="tabs-nav" id="tabsNav"></div></div>
 <div class="main">
   <div class="empty" id="emptyState">
@@ -201,6 +206,21 @@ body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--bg);color:
     <div class="modal-acts">
       <button class="btn b-out b-sm" onclick="App.closeTxtModal()">取消</button>
       <button class="btn b-navy b-sm" onclick="App.processTxt()">確認匯入</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="jsonBackupModal">
+  <div class="modal-box" style="max-width:720px">
+    <div class="modal-ttl">JSON 文字備份</div>
+    <p class="small-note" style="margin-bottom:10px">
+      行動裝置請優先使用「匯出 JSON」保存評分。若 Documents 或其他 App 內建瀏覽器無法下載，請改用此「JSON 文字備份」：按「複製文字」或「全選文字」後手動複製，之後在電腦或可建立文字檔的 App 中貼上，存成副檔名為 <strong>.json</strong> 的 UTF-8 文字檔，再用「匯入 JSON」載回工具。
+    </p>
+    <textarea class="json-backup-ta" id="jsonBackupText" spellcheck="false" autocapitalize="off" autocomplete="off" onclick="this.select()" onfocus="this.select()"></textarea>
+    <div class="modal-acts" style="margin-top:12px">
+      <button class="btn b-navy b-sm" onclick="App.copyJsonBackup()">複製文字</button>
+      <button class="btn b-out b-sm" onclick="App.selectJsonBackup()">全選文字</button>
+      <button class="btn b-out b-sm" onclick="App.closeJsonBackup()">關閉</button>
     </div>
   </div>
 </div>
@@ -388,11 +408,11 @@ const TPLS=['資料完整，整理清晰','資料豐富，條理分明','活動�
 
 // ═══ STATE ═══
 // sub state: 'none'=✗未達成(default) | 'partial'=△部分達成 | 'full'=✓完全達成
-const S={recs:[],scores:{},dimNA:{},dimBonus:{},confirmed:{},ovFb:{},charts:{},tab:null,prevRid:null,prevURL:null};
+const S={recs:[],scores:{},dimNA:{},dimBonus:{},confirmed:{},ovFb:{},ovAuto:{},charts:{},tab:null,prevRid:null,prevURL:null};
 function initRec(r){
  const rid=r.id;S.scores[rid]={};
  S.dimNA[rid]={rights:!r.rights,regulations:!r.regulations,finance:!r.finance,election:!r.election};
- S.confirmed[rid]=false;S.ovFb[rid]='';S.dimBonus[rid]={rights:{c:false,o:false},regulations:{c:false,o:false},finance:{c:false,o:false},election:{c:false,o:false}};
+ S.confirmed[rid]=false;S.ovFb[rid]='';S.ovAuto[rid]='';S.dimBonus[rid]={rights:{c:false,o:false},regulations:{c:false,o:false},finance:{c:false,o:false},election:{c:false,o:false}};
  for(const dim of DIMS) for(const ind of dim.indicators)
  S.scores[rid][ind.id]={subs:new Array(ind.subs.length).fill('unset'),otherIssue:'off',fb:'',el6na:false};
 }
@@ -407,6 +427,7 @@ function makeSession(){
   dimBonus:S.dimBonus,
   confirmed:S.confirmed,
   ovFb:S.ovFb,
+  ovAuto:S.ovAuto,
  };
 }
 function autosave(){
@@ -450,12 +471,14 @@ function restoreSession(session){
  S.dimBonus=session.dimBonus||{};
  S.confirmed=session.confirmed||{};
  S.ovFb=session.ovFb||{};
+ S.ovAuto=session.ovAuto||{};
  S.recs.forEach(r=>{
   const rid=r.id;
   if(!S.dimNA[rid])S.dimNA[rid]={rights:!r.rights,regulations:!r.regulations,finance:!r.finance,election:!r.election};
   if(!S.dimBonus[rid])S.dimBonus[rid]={rights:{c:false,o:false},regulations:{c:false,o:false},finance:{c:false,o:false},election:{c:false,o:false}};
   if(!S.confirmed[rid])S.confirmed[rid]=false;
   if(S.ovFb[rid]===undefined)S.ovFb[rid]='';
+  if(S.ovAuto[rid]===undefined)S.ovAuto[rid]='';
   if(!S.scores[rid])S.scores[rid]={};
   for(const dim of DIMS) for(const ind of dim.indicators){
    if(!S.scores[rid][ind.id])S.scores[rid][ind.id]={subs:new Array(ind.subs.length).fill('unset'),otherIssue:'off',fb:'',el6na:false};
@@ -467,25 +490,25 @@ function restoreSession(session){
  return true;
 }
 async function saveBlob(blob,filename,successMsg){
- let file=null;
- if(typeof File!=='undefined')file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
- if(file&&navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){
-  try{await navigator.share({files:[file],title:filename});App.toast(successMsg||'檔案已準備好分享或儲存');return;}catch(err){if(err.name==='AbortError')return;}
- }
- const url=URL.createObjectURL(blob);
- const a=document.createElement('a');
- a.href=url;a.download=filename;a.rel='noopener';
- document.body.appendChild(a);a.click();document.body.removeChild(a);
- setTimeout(()=>URL.revokeObjectURL(url),1000);
- App.toast(successMsg||'檔案已下載');
+ await exportBlob(blob,filename,successMsg);
 }
 function downloadBlob(blob,filename,successMsg){
  const url=URL.createObjectURL(blob);
  const a=document.createElement('a');
  a.href=url;a.download=filename;a.rel='noopener';
+ a.style.display='none';
  document.body.appendChild(a);a.click();document.body.removeChild(a);
  setTimeout(()=>URL.revokeObjectURL(url),1000);
  App.toast(successMsg||'檔案已下載');
+}
+async function exportBlob(blob,filename,successMsg){
+ downloadBlob(blob,filename,successMsg);
+}
+function textDataHref(text,mime='application/octet-stream'){
+ return`data:${mime};charset=utf-8,${encodeURIComponent(text)}`;
+}
+function base64DataHref(base64,mime){
+ return`data:${mime};base64,${base64}`;
 }
 
 // ═══ COMPUTE ═══
@@ -607,14 +630,53 @@ downloadCsvTemplate(){
 },
 
 // ── SESSION EXPORT / IMPORT ──
-exportSession(){
- if(!S.recs.length){App.toast('尚無評分資料可匯出','red');return;}
+buildSessionExport(){
+ if(!S.recs.length){App.toast('尚無評分資料可匯出','red');return null;}
  const session=makeSession();
  const json=JSON.stringify(session,null,2);
- const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+ const blob=new Blob([json],{type:'application/octet-stream'});
  const ts=new Date().toISOString().slice(0,10);
  autosave();
- saveBlob(blob,`學生會評分記錄_${ts}.json`,`已匯出 ${S.recs.length} 位受評者的評分記錄`);
+ return{blob,href:textDataHref(json,'application/octet-stream'),filename:`學生會評分記錄_${ts}.json`,msg:`已匯出 ${S.recs.length} 位受評者的評分記錄`};
+},
+async exportSession(){
+ const pkg=App.buildSessionExport();if(!pkg)return;
+ await exportBlob(pkg.blob,pkg.filename,pkg.msg);
+},
+showJsonBackup(){
+ const pkg=App.buildSessionExport();if(!pkg)return;
+ const ta=document.getElementById('jsonBackupText');
+ const json=JSON.stringify(makeSession(),null,2);
+ ta.value=json;ta.textContent=json;
+ document.getElementById('jsonBackupModal').classList.add('show');
+ setTimeout(()=>App.selectJsonBackup(),80);
+ App.toast('已產生 JSON 文字備份，請複製文字保存');
+},
+selectJsonBackup(){
+ const ta=document.getElementById('jsonBackupText');if(!ta)return;
+ ta.focus();ta.select();
+ if(ta.setSelectionRange)ta.setSelectionRange(0,ta.value.length);
+},
+async copyJsonBackup(){
+ const ta=document.getElementById('jsonBackupText');if(!ta)return;
+ App.selectJsonBackup();
+ try{
+  if(navigator.clipboard&&window.isSecureContext){
+   await navigator.clipboard.writeText(ta.value);
+   App.toast('JSON 文字已複製');
+   return;
+  }
+ }catch(err){console.warn(err);}
+ try{
+  const ok=document.execCommand&&document.execCommand('copy');
+  App.toast(ok?'JSON 文字已複製':'已全選文字，請用系統選單複製');
+ }catch(err){
+  console.warn(err);
+  App.toast('已全選文字，請用系統選單複製');
+ }
+},
+closeJsonBackup(){
+ document.getElementById('jsonBackupModal').classList.remove('show');
 },
 
 importSession(inp){
@@ -639,6 +701,199 @@ restoreAutosave(){
   const session=JSON.parse(raw);
   if(restoreSession(session))App.toast(`已還原本機備份：${S.recs.length} 位受評者`);
  }catch(err){console.error(err);App.toast('本機備份讀取失敗','red');}
+},
+buildSheetExport(){
+ if(!S.recs.length){App.toast('尚無評分資料可匯出','red');return null;}
+ if(!window.XLSX){App.toast('XLSX 套件尚未載入，請改用 JSON 備份','red');return null;}
+ const rows=[];
+ const summary=[];
+ const wideHeaders=['編號','學校名稱','學權1','學權2','學權3','學權4','學權5','學權總','法規1','法規2','法規3','法規4','法規5','法規6','法規總','財務1','財務2','財務3','財務4','財務5','財務6','財務總','選舉1','選舉2','選舉3','選舉4','選舉5','選舉6','選舉總','委員備註'];
+ const wideAoA=[['115年「學生會基本運作」解鎖認證評分表'],wideHeaders];
+ const dimWide={
+  rights:{ids:['r1','r2','r3','r4','r5'],start:'C',end:'G',total:'H',min:5},
+  regulations:{ids:['reg1','reg2','reg3','reg4','reg5','reg6'],start:'I',end:'N',total:'O',min:6},
+  finance:{ids:['fin1','fin2','fin3','fin4','fin5','fin6'],start:'P',end:'U',total:'V',min:6},
+  election:{ids:['el1','el2','el3','el4','el5','el6'],start:'W',end:'AB',total:'AC',min:5},
+ };
+ for(const rec of S.recs){
+  const rid=rec.id;
+  const wideRow=[rid,rec.name];
+  const recSummary={編號:rid,名稱:rec.name,整體建議:S.ovFb[rid]||'',已確認:S.confirmed[rid]?'TRUE':'FALSE'};
+  for(const dim of DIMS){
+   const dimApplicable=!S.dimNA[rid]?.[dim.id];
+   const dimScore=getDimSc(rid,dim.id);
+   const dimState=getDimSt(rid,dim.id);
+   const w=dimWide[dim.id];
+   if(w){
+    for(const iid of w.ids){
+     const ind=dim.indicators.find(i=>i.id===iid);
+     const s=S.scores[rid]?.[iid];
+     const isNA=!dimApplicable||(ind?.opt&&s?.el6na);
+     wideRow.push(isNA?'':getRT(rid,iid));
+    }
+    wideRow.push('');
+   }
+   recSummary[`${dim.name}分數`]=dimScore===null?'':dimScore;
+   recSummary[`${dim.name}狀態`]=dimState==='unlocked'?'解鎖':dimState==='locked'?'未解鎖':'不適用';
+   recSummary[`${dim.name}適用`]=dimApplicable?'TRUE':'FALSE';
+   const bonus=S.dimBonus[rid]?.[dim.id]||{c:false,o:false};
+   for(const ind of dim.indicators){
+    const s=S.scores[rid]?.[ind.id]||{subs:[],otherIssue:'off',fb:'',el6na:false};
+    const rt=(ind.opt&&s.el6na)?'NA':getRT(rid,ind.id);
+    const base={
+     階段:'',
+     評審者:'',
+     編號:rid,
+     名稱:rec.name,
+     面向ID:dim.id,
+     面向:dim.name,
+     面向適用:dimApplicable?'TRUE':'FALSE',
+     面向分數:dimScore===null?'':dimScore,
+     面向狀態:dimState==='unlocked'?'解鎖':dimState==='locked'?'未解鎖':'不適用',
+     指標ID:ind.id,
+     指標編號:ind.num,
+     指標名稱:ind.short,
+     指標評級:rt,
+     其他未竟事宜:s.otherIssue||'off',
+     指標回饋:s.fb||'',
+     整體建議:S.ovFb[rid]||'',
+     資料保存完整:bonus.c?'TRUE':'FALSE',
+     資料整理清晰:bonus.o?'TRUE':'FALSE',
+     線上選舉不適用:ind.opt&&s.el6na?'TRUE':'FALSE',
+    };
+    ind.subs.forEach((sub,i)=>{
+     rows.push({...base,資料列類型:'細項',細項序號:i+1,細項內容:sub.text,狀態:s.subs?.[i]||'unset'});
+    });
+    rows.push({...base,資料列類型:'其他未竟事宜',細項序號:'other',細項內容:'其他未竟事宜',狀態:s.otherIssue||'off'});
+   }
+  }
+  wideRow.push(S.ovFb[rid]||'');
+  wideAoA.push(wideRow);
+  summary.push(recSummary);
+ }
+ const wb=XLSX.utils.book_new();
+ const wideWs=XLSX.utils.aoa_to_sheet(wideAoA);
+ wideWs['!merges']=[{s:{r:0,c:0},e:{r:0,c:29}}];
+ wideWs['!cols']=wideHeaders.map((h,i)=>({wch:i===1?24:i===29?42:h.endsWith('總')?10:8}));
+ for(let r=3;r<wideAoA.length+1;r++){
+  const formulas=[
+   ['H',`IF(COUNTA(C${r}:G${r})<5,"",IF(AND(COUNTIF(C${r}:G${r},"C")=0,COUNTIF(C${r}:G${r},"B")<=1),"通過","未通過"))`],
+   ['O',`IF(COUNTA(I${r}:N${r})<6,"",IF(AND(COUNTIF(I${r}:N${r},"C")=0,COUNTIF(I${r}:N${r},"B")<=1),"通過","未通過"))`],
+   ['V',`IF(COUNTA(P${r}:U${r})<6,"",IF(AND(COUNTIF(P${r}:U${r},"C")=0,COUNTIF(P${r}:U${r},"B")<=1),"通過","未通過"))`],
+   ['AC',`IF(COUNTA(W${r}:AA${r})<5,"",IF(AND(COUNTIF(W${r}:AB${r},"C")=0,COUNTIF(W${r}:AB${r},"B")<=1),"通過","未通過"))`],
+  ];
+  formulas.forEach(([col,f])=>{wideWs[`${col}${r}`]={t:'s',f};});
+ }
+ XLSX.utils.book_append_sheet(wb,wideWs,'評分表');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'明細');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(summary),'彙整');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+  ['用途','第一張「評分表」採一校一列格式，方便委員快速檢視、比對與做一致性分析。'],
+  ['評分表欄位','學權、法規、財務、選舉各指標請使用 A、B、C；各面向總欄已放入通過／未通過公式。'],
+  ['匯回工具','若要精準回填並生成報告，請修正並保留「明細」表欄位後再匯回工具；「評分表」主要供分析與人工核對。'],
+  ['狀態','細項狀態請使用 full、partial、none、unset。'],
+  ['其他未竟事宜','其他未竟事宜列的狀態請使用 off、partial、none。'],
+  ['回填鍵','工具依「編號 + 指標ID + 細項序號」回填資料。'],
+  ['注意','JSON 仍是完整備份；Sheet 檔主要用於分析與修正回填。'],
+ ]),'說明');
+ const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+ const b64=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
+ const ts=new Date().toISOString().slice(0,10);
+ const filename=`學生會評分分析_${ts}.xlsx`;
+ const blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ return{blob,href:base64DataHref(b64,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),filename,msg:'已匯出 Sheet 分析檔'};
+},
+async exportSheet(){
+ const pkg=App.buildSheetExport();if(!pkg)return;
+ await exportBlob(pkg.blob,pkg.filename,pkg.msg);
+},
+prepareExportLink(a){
+ const kind=a.dataset.exportKind;
+ const pkg=kind==='session'?App.buildSessionExport():kind==='sheet'?App.buildSheetExport():null;
+ if(!pkg){a.href='#';a.removeAttribute('download');return false;}
+ if(a.dataset.url)URL.revokeObjectURL(a.dataset.url);
+ a.href=pkg.href||URL.createObjectURL(pkg.blob);a.download=pkg.filename;
+ a.dataset.url=pkg.href?'':a.href;a.dataset.msg=pkg.msg||'檔案已下載';
+ return true;
+},
+finishExportLink(a){
+ if(!a.dataset.url&&!App.prepareExportLink(a))return false;
+ App.toast(a.dataset.msg||'檔案已下載');
+ const url=a.dataset.url;
+ setTimeout(()=>{
+  if(url&&a.dataset.url===url){
+   URL.revokeObjectURL(url);
+   delete a.dataset.url;delete a.dataset.msg;
+   a.href='#';a.removeAttribute('download');
+  }
+ },30000);
+ return true;
+},
+importSheet(inp){
+ const file=inp.files[0];if(!file)return;
+ const ext=file.name.split('.').pop().toLowerCase();
+ const applyRows=rows=>{
+  try{App.applySheetRows(rows);App.toast(`已匯入 Sheet 修正版：${rows.length} 列`);}
+  catch(err){console.error(err);App.toast('Sheet 修正版匯入失敗，請確認欄位格式','red');}
+ };
+ if(ext==='csv'){
+  readTextFile(file,txt=>{
+   const parsed=csvToRows(txt);if(parsed.length<2){App.toast('CSV 格式錯誤','red');return;}
+   const hdrs=parsed[0].map(h=>String(h).trim());
+   const rows=parsed.slice(1).map(vals=>{const obj={};hdrs.forEach((h,i)=>obj[h]=vals[i]||'');return obj;});
+   applyRows(rows);
+  },()=>App.toast('CSV 讀取錯誤','red'));
+ }else if(['xlsx','xls'].includes(ext)){
+  const reader=new FileReader();
+  reader.onload=e=>{
+   try{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const sheet=wb.Sheets['明細']||wb.Sheets[wb.SheetNames[0]];
+    applyRows(XLSX.utils.sheet_to_json(sheet,{defval:''}));
+   }catch(err){console.error(err);App.toast('試算表讀取錯誤','red');}
+  };
+  reader.readAsArrayBuffer(file);
+ }else App.toast('請匯入 CSV 或 XLSX 修正版','red');
+ inp.value='';
+},
+applySheetRows(rows){
+ if(!rows.length)throw new Error('empty sheet');
+ const tb=v=>v===true||v===1||['TRUE','true','1','是','Y','y'].includes(String(v).trim());
+ const normSub=v=>{const s=String(v||'').trim();return ['full','partial','none','unset'].includes(s)?s:s==='✓'?'full':s==='△'?'partial':s==='✗'?'none':'unset';};
+ const normOther=v=>{const s=String(v||'').trim();return ['off','partial','none'].includes(s)?s:s==='無'?'off':s==='△'?'partial':s==='✗'?'none':'off';};
+ if(!S.recs.length){
+  const map=new Map();
+  rows.forEach((row,i)=>{
+   const id=String(row['編號']||row['id']||'').trim()||`R-${String(i+1).padStart(2,'0')}`;
+   if(!map.has(id))map.set(id,{id,name:String(row['名稱']||row['name']||id).trim()||id,rights:1,regulations:1,finance:1,election:1});
+  });
+  S.recs=Array.from(map.values());S.recs.forEach(r=>initRec(r));
+ }
+ const recMap=new Map(S.recs.map(r=>[String(r.id),r]));
+ const dimNameMap={學生權益:'rights',法規組織:'regulations',法規建立暨組織運作:'regulations',財務:'finance',年度計畫暨財務制度:'finance',選舉:'election',選舉制度:'election'};
+ for(const row of rows){
+  const rid=String(row['編號']||row['id']||'').trim();if(!rid||!recMap.has(rid))continue;
+  const rec=recMap.get(rid);
+  if(row['名稱'])rec.name=String(row['名稱']).trim();
+  const did=String(row['面向ID']||'').trim()||dimNameMap[String(row['面向']||'').trim()];
+  const dim=DIMS.find(d=>d.id===did);if(!dim)continue;
+  if(row['面向適用']!=='')S.dimNA[rid][dim.id]=!tb(row['面向適用']);
+  if(row['資料保存完整']!=='')S.dimBonus[rid][dim.id].c=tb(row['資料保存完整']);
+  if(row['資料整理清晰']!=='')S.dimBonus[rid][dim.id].o=tb(row['資料整理清晰']);
+  const iid=String(row['指標ID']||'').trim();const ind=dim.indicators.find(i=>i.id===iid);if(!ind)continue;
+  const score=S.scores[rid][iid];
+  if(row['線上選舉不適用']!=='')score.el6na=tb(row['線上選舉不適用']);
+  if(row['指標回饋']!==undefined)score.fb=String(row['指標回饋']||'');
+  if(row['整體建議']!==undefined&&String(row['整體建議']).trim())S.ovFb[rid]=String(row['整體建議']);
+  const subNo=String(row['細項序號']||'').trim();
+  if(subNo==='other'||row['資料列類型']==='其他未竟事宜')score.otherIssue=normOther(row['狀態']||row['其他未竟事宜']);
+  else {
+   const idx=parseInt(subNo,10)-1;
+   if(idx>=0&&idx<score.subs.length)score.subs[idx]=normSub(row['狀態']);
+   if(row['其他未竟事宜']!==undefined&&String(row['其他未竟事宜']).trim())score.otherIssue=normOther(row['其他未竟事宜']);
+  }
+ }
+ App.render();if(S.recs.length)App.switchTab(S.tab&&recMap.has(S.tab)?S.tab:S.recs[0].id);autosave();
 },
 toast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.background=col==='red'?'#dc2626':'var(--navy)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);},
 
@@ -785,8 +1040,9 @@ mkSummary(rid){
   </div>
   <div class="ovfb-sec">
    <div class="ovfb-lbl"><span>📝 整體質性建議（確認前可修改）</span>
-    <button class="btn b-out b-sm" onclick="App.autoFb('${rid}')">自動匯整</button>
+   <button class="btn b-out b-sm" onclick="App.autoFb('${rid}')">自動匯整</button>
    </div>
+   <div class="ovfb-note">解鎖狀態會以最新評分自動更新；若曾在面向指標質性回饋增減文字，重新彙整後仍可能出現重複或殘留，請以此欄最終文字為準並記得編修。</div>
    <textarea class="ovfb-ta" id="ovfb-${rid}" placeholder="此處可輸入整體質性建議，或點「自動匯整」從各指標回饋中生成..." oninput="App.upOvFb('${rid}',this.value)">${S.ovFb[rid]||''}</textarea>
    <div class="chips" style="margin-top:7px">${tpls}</div>
   </div>
@@ -797,9 +1053,16 @@ mkSummary(rid){
   </div>
   <div class="act-row">
    <span class="imp-lbl">評分記錄：</span>
-   <button class="btn-imp" onclick="App.exportSession()" title="將所有評分與回饋匯出為 JSON 檔案">匯出 JSON</button>
+   <a class="btn-imp" href="#" data-export-kind="session" onmouseenter="App.prepareExportLink(this)" onfocus="App.prepareExportLink(this)" onmousedown="App.prepareExportLink(this)" ontouchstart="App.prepareExportLink(this)" onpointerdown="App.prepareExportLink(this)" onclick="return App.finishExportLink(this)" title="將所有評分與回饋匯出為 JSON 檔案">匯出 JSON</a>
+   <button class="btn-imp" onclick="App.showJsonBackup()" title="下載失敗時改用文字方式備份 JSON">JSON 文字備份</button>
    <button class="btn-imp" onclick="document.getElementById('sessionIn').click()" title="載入先前匯出的評分記錄 JSON">匯入 JSON</button>
    <button class="btn-imp" onclick="App.restoreAutosave()" title="從此瀏覽器自動備份還原">還原本機備份</button>
+  </div>
+  <div class="act-row">
+   <span class="imp-lbl">Sheet 分析：</span>
+   <a class="btn-imp" href="#" data-export-kind="sheet" onmouseenter="App.prepareExportLink(this)" onfocus="App.prepareExportLink(this)" onmousedown="App.prepareExportLink(this)" ontouchstart="App.prepareExportLink(this)" onpointerdown="App.prepareExportLink(this)" onclick="return App.finishExportLink(this)" title="匯出可供 Google Sheets / Excel 分析與修正的 XLSX">匯出 Sheet 分析檔</a>
+   <button class="btn-imp" onclick="document.getElementById('sheetIn').click()" title="匯入依分析檔格式修正後的 CSV 或 XLSX">匯入 Sheet 修正版</button>
+   <span class="sheet-note">建議使用電腦匯出 Sheet；行動裝置請匯出 JSON，若無法操作請選「JSON 文字備份」。</span>
   </div>
 
  </div>`;
@@ -902,8 +1165,111 @@ autoFb(rid){
   if(fbs.length)line+='：'+fbs.join('；');
   parts.push(line);
  }
- const gen=parts.join('\n\n');S.ovFb[rid]=gen;
- const el=document.getElementById(`ovfb-${rid}`);if(el)el.value=gen;
+ const gen=parts.join('\n\n');
+ const prevAuto=S.ovAuto[rid]||'';
+ const ovEl=document.getElementById(`ovfb-${rid}`);
+ const current=ovEl?ovEl.value:(S.ovFb[rid]||'');
+ let merged=gen;
+ const oldParts=prevAuto.split(/\n{2,}/).filter(Boolean);
+ const newParts=gen.split(/\n{2,}/).filter(Boolean);
+ const markerOf=txt=>(txt.match(/^【[^】]+】/)||[''])[0];
+ const stripStatusText=txt=>String(txt||'').replace(/【([^】]+)】（(?:已解鎖|尚未解鎖)）/g,'【$1】').replace(/（(?:已解鎖|尚未解鎖)）[:：]?/g,'');
+ const oldMap={};oldParts.forEach(p=>{const m=markerOf(p);if(m)oldMap[m]=p;});
+ const newMap={};newParts.forEach(p=>{const m=markerOf(p);if(m)newMap[m]=p;});
+	 const markers=Array.from(new Set([...oldParts.map(markerOf),...newParts.map(markerOf)].filter(Boolean)));
+	 const mergeEditedBlock=(oldBlock,newBlock,currentBlock)=>{
+	  const text=currentBlock.trim();
+	  if(!text||text===oldBlock)return newBlock;
+	  const autoRest=block=>{
+	   const m=block.match(/^【[^】]+】（[^）]+）/);
+	   return m?block.slice(m[0].length).trim():block.replace(/^【[^】]+】/,'').trim();
+	  };
+	  const oldRest=autoRest(oldBlock),newRest=autoRest(newBlock),curRest=autoRest(text);
+	  if(!oldRest||!curRest)return newBlock;
+	  const n=oldRest.length,m=curRest.length,w=m+1,dp=new Uint16Array((n+1)*(m+1));
+	  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--){
+	   dp[i*w+j]=oldRest[i]===curRest[j]?dp[(i+1)*w+j+1]+1:Math.max(dp[(i+1)*w+j],dp[i*w+j+1]);
+	  }
+	  const matches=[];let i=0,j=0;
+	  while(i<n&&j<m){
+	   if(oldRest[i]===curRest[j]){matches.push([i,j]);i++;j++;}
+	   else if(dp[(i+1)*w+j]>=dp[i*w+j+1])i++;else j++;
+	  }
+	  const inserts=[];let prevOld=0,prevCur=0;
+	  matches.forEach(([oi,cj])=>{
+	   if(cj>prevCur)inserts.push({text:curRest.slice(prevCur,cj),pos:prevOld});
+	   prevOld=oi+1;prevCur=cj+1;
+	  });
+	  if(prevCur<m)inserts.push({text:curRest.slice(prevCur),pos:prevOld});
+	  const findInsertPos=(srcPos,out)=>{
+	   const before=oldRest.slice(0,srcPos),after=oldRest.slice(srcPos);
+	   for(let len=Math.min(28,before.length);len>=4;len--){const a=before.slice(-len),idx=out.lastIndexOf(a);if(idx>=0)return idx+a.length;}
+	   for(let len=Math.min(28,after.length);len>=4;len--){const a=after.slice(0,len),idx=out.indexOf(a);if(idx>=0)return idx;}
+	   return Math.min(srcPos,out.length);
+	  };
+	  let outRest=newRest;
+	  inserts.filter(x=>x.text.trim()).forEach(ins=>{
+	   const insText=stripStatusText(ins.text);
+	   if(!insText.trim()||outRest.includes(insText.trim()))return;
+	   const p=findInsertPos(ins.pos,outRest);
+	   outRest=outRest.slice(0,p)+insText+outRest.slice(p);
+	  });
+	  return newBlock.replace(newRest,outRest);
+	 };
+ const mergeUnknownBlock=(newBlock,currentBlock)=>{
+  const text=currentBlock.trim();
+  if(!text||text===newBlock)return newBlock;
+  if(text.startsWith(newBlock))return currentBlock.replace(newBlock,newBlock);
+  const marker=markerOf(newBlock);
+  const status=(newBlock.match(/^【[^】]+】（[^）]+）/)||[''])[0];
+  if(status&&text.startsWith(status)){
+   const extra=text.slice(status.length).trim();
+   if(extra&&extra!==newBlock.slice(status.length).trim())return`${newBlock}\n${extra}`;
+  }
+  if(marker&&text.startsWith(marker)){
+   const extra=text.slice(marker.length).trim();
+   if(extra&&extra!==newBlock.slice(marker.length).trim())return`${newBlock}\n${extra}`;
+  }
+  return newBlock;
+ };
+	 if(markers.some(m=>current.includes(m))){
+  let pos=0;merged='';const used={};
+  while(pos<current.length){
+   const hits=markers.map(m=>({m,idx:current.indexOf(m,pos)})).filter(h=>h.idx>=0);
+   if(!hits.length){merged+=current.slice(pos);break;}
+   hits.sort((a,b)=>a.idx-b.idx);
+   const {m,idx:start}=hits[0];
+   merged+=current.slice(pos,start);
+   const next=markers.map(n=>current.indexOf(n,start+m.length)).filter(idx=>idx>start);
+   const end=next.length?Math.min(...next):current.length;
+   const curBlock=current.slice(start,end);
+   const sep=curBlock.match(/\n{2,}/);
+   const curCore=sep?curBlock.slice(0,sep.index):curBlock;
+   const curTail=sep?curBlock.slice(sep.index):'';
+   if(newMap[m]&&oldMap[m]){
+    merged+=mergeEditedBlock(oldMap[m],newMap[m],curCore)+curTail;
+    used[m]=true;
+   }else if(newMap[m]){
+    merged+=mergeUnknownBlock(newMap[m],curCore)+curTail;used[m]=true;
+   }else{
+    merged+=curBlock;
+   }
+   pos=end;
+  }
+	  const missing=newParts.filter(p=>{const m=markerOf(p);return m&&!used[m]&&!current.includes(m);});
+	  if(missing.length)merged+=(merged.trim()?'\n\n':'')+missing.join('\n\n');
+	 }
+	 newParts.forEach(p=>{
+	  const m=markerOf(p);if(!m)return;
+	  const latest=(p.match(/^【[^】]+】（[^）]+）/)||[''])[0];
+	  if(!latest)return;
+	  const other=latest.includes('已解鎖')?`${m}（尚未解鎖）`:`${m}（已解鎖）`;
+	  merged=merged.split(other).join(m);
+	 });
+ merged=merged.replace(/^【手動補充】\s*/,'').trim();
+ S.ovAuto[rid]=gen;
+ S.ovFb[rid]=merged;
+ if(ovEl)ovEl.value=S.ovFb[rid];
  autosave();
 },
 togSD(row){row.classList.toggle('open');},
